@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 import pickle
 import numpy as np
 
@@ -6,7 +6,6 @@ app = Flask(__name__)
 
 # Load data
 popular_books_df = pickle.load(open('processed-data/popular-books.pkl', 'rb'))
-
 
 # Try to load recommendation data if available
 try:
@@ -60,6 +59,14 @@ def recommend():
     
     return render_template('recommend.html', data=data)
 
+@app.route('/autocomplete', methods=['GET'])
+def autocomplete():
+    query = request.args.get('query', '')
+    if query:
+        suggestions = popular_books_df[popular_books_df['Book-Title'].str.contains(query, case=False, na=False)]['Book-Title'].unique().tolist()
+    else:
+        suggestions = []
+    return jsonify({'suggestions': suggestions})
+
 if __name__ == '__main__':
     app.run(debug=True)
-
